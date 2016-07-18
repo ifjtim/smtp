@@ -1,0 +1,94 @@
+Dokumentace k projektu z předmětu ISA 
+
+
+
+
+SMTP klient
+
+
+
+
+
+
+
+
+Tomasz Konderla, xkonde03
+Dne 21 listopadu 2015
+Fakulta informačních technologií
+ Vysoké učení technické v Brně
+Obsah:
+Úvod do projektu ……………………………………………………………………..2
+SMTP protokol     ………………………………………………………………………2
+	Popis SMTP příkazu …………………………………………………………2
+	Ukázka SMTP konverzací i z odpověďmi serveru……………..3
+Implementace…………………………………………………………………………..3
+	Popis programu……………………………………………………………….3
+Informace o programu………………………………………………………………4
+Návod k požití……………………………………………………………………..……4
+Použitá literatura………………………………………………………………………4
+
+
+
+
+Úvod do projektu:
+Měli jsme za úkol vytvořit jednoduchého SMTP klienta , který bude zasílat emaily na předpřipravený SMTP server. SMTP je internetový protokol určený pro přenos zpráv elektronické pošty (e-mailů) mezi přepravci elektronické pošty (MTA), budeme se mu ješče věnovat níže. E-maily budou zapsané v souborech . Cestu k souborům bude předávána pomocí  argument -i při spouštění programu. Dále tam jsou nepovinné argumenty  –a ip adresa –p port –w počet sekund udržení komunikace po odeslaní poslední správy.
+SMTP protokol: 
+Simple Mail Transfer Protocol (zkratka SMTP) je internetový protokol určený pro přenos zpráv elektronické pošty (e-mailů) mezi přepravci elektronické pošty (MTA). Protokol zajišťuje doručení pošty pomocí přímého spojení mezi odesílatelem a adresátem; zpráva je doručena do tzv. poštovní schránky adresáta, ke které potom může uživatel kdykoli (off-line) přistupovat (vybírat zprávy) pomocí protokolů POP3 nebo IMAP. Jedná se o jednu z nejstarších aplikací, původní norma RFC 821 byla vydána v roce 1982 (v roce2001 ji nahradila novější RFC 2821). SMTP funguje nad protokolem TCP, používá port TCP/25.
+Popis SMTP příkazu:
+ HELO - Tento příkaz spouští SMTP konverzaci. Hostitel se připojí ke vzdálenému serveru SMTP identifikuje sebe tím, že uvede jméno SMTP klienta.
+
+EHLO – Alternativní příkaz pro spouštění SMTP konverzace. Udává, že klient chce využit rozšířený SMTP (ESMTP) protocol.
+
+MAIL From:<source email address> - Je to začátek konverzace . Udává emailovou adresu zdroje.
+
+RCPT To:<destination email address> - infikuje e-mailové jméno příjemce správy , muže byt opakován vícekrát pro vice příjemců stejné správy.
+
+DATA – tento příkaz znamená, že bude následovat proud dat zakončeny tečkou na samostatném řádku. Slouží k odesílaní textu e-mailové zprávy.
+
+QUIT – Tento příkaz slouží k ukončení komunikace ze SMTP serverem, protože v rámci jednoho navázaní komunikace můžeme převést i několik různých e-mailu.
+
+RSET – Pokud je zaslán tenhle příkaz aktuální konverzace je ukončená spojení je stále navázané. Všechny informace o odesílateli a příjemci e-mailových dát budou vymazané.
+Toto jsou popsané SMTP příkazy , které jsem využil v rámci mého jednoduchého SMTP klienty. Dále ještě existují tyto příkazy : SIZE=numberofbytes, VRFY username, EXPN aliasname, NOOP.
+
+Ukázka SMTP konverzací i z odpověďmi serveru:
+
+
+C: EHLO client.example.com 
+S: 250-smtp.server.com Hello client.example.com
+S: 250-SIZE 1000000
+S: 250-AUTH LOGIN PLAIN CRAM-MD5
+S: 250 HELP
+C: MAIL FROM:<mail@samlogic.com>
+S: 250 OK
+C: RCPT TO:<john@mail.com>
+S: 250 OK
+C: DATA
+S: 354 Send message, end with a "." on a line by itself
+C: AHOJ
+S .
+S: 250 OK, message accepted for delivery: queued as 12345
+C: QUIT
+S: 221 Bye
+
+Implementace:
+
+Jako programovací jazyk jsem zvolil programovací jazyk c++. Dále jsem využíval síťovou knihovnu BSD sockets pro zaječení komunikace mezi klientem a serverem.
+
+Popis programu:
+Na zpracováni argumentu využívám getopt . Potom otevřu soubor  v kterém je text . Tento text zpracují pomocí konečného automatu . Zprávy které budu odesílat SMTP serveru postupně ukládám do vectoru. Potom už navážu komunikací se serverem a ve smyčce  odesílám  správy, které mám uložené ve vectoru zároveň taký přimam odpovědí od serveru pokud mi dojde nějaká chybová hláška tak jí zapracují a oznámím na chybový vystup.
+Také odchytávám signály SIGTERM, SIGQUIT ,SIGINT. K tomu používám knihovnu signal.h. Protože předtím než signálem ukončíme klienta musíme ukončit navázanou komunikací. K tomu využívám dvě boolovské globální proměnné zahajena_konverzace ta mi signalizuje jestli konverzace byla zahájena a druha prerus ta signalizuje jestli byl přijat signál přerušení. Pokud proměnna prerus je true snažím se ukončit komunikací čím jak nejrychleji.
+
+Informace o programu:
+Počet souborů :  2
+Řádků kodu: 419
+Velikost zdrojových souborů: 12kb +1kb = 13kb
+
+Návod k požití:
+Nejprve musíme přeložit kód pomocí příkazu make.
+Potom ho spustit ./smtpklient [ -a IP ] [ -p port ] [ -i súbor ] [ -w sekúnd ]
+-i můžeme zadat i cestu relativní nebo absolutní
+Použitá literatura:
+
+RFC2821 - https://www.ietf.org/rfc/rfc2821.txt
+SMNT Commands - http://the-welters.com/professional/smtp.html
+Wikipedia - http://the-welters.com/professional/smtp.html
